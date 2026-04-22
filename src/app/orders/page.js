@@ -88,10 +88,15 @@ export default function OrdersPage() {
 
             if (!res.ok) throw new Error(data.error || 'Failed to refresh status');
 
+            // Show a quick success alert if no errors
+            if (data.updatedCount > 0) {
+                console.log(`Successfully synced ${data.updatedCount} orders.`);
+            }
+
             // Re-fetch orders to see updates
             await fetchOrders();
         } catch (err) {
-            setError(err.message);
+            setError('Refresh Error: ' + err.message);
         } finally {
             setRefreshing(false);
         }

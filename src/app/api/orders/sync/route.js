@@ -6,77 +6,103 @@ export async function POST() {
     const supabase = createServerClient();
 
     try {
-        // 1. Get all active orders that are not in final state
-        // Typical final states: Completed, Canceled, Partial (sometimes Partial can be final)
+        // 1. Get all orders that are NOT in a final state
+        // We include many possible final state variations just in case
         const { data: orders, error: ordersError } = await supabase
             .from('orders')
             .select(`
-                id, external_order_id, provider_id,
-                api_providers (api_url, api_key)
+                id, external_order_id, provider_id, status,
+                api_providers!inner(id, api_url, api_key)
             `)
-            .not('status', 'in', '("Completed", "Canceled", "Refunded")')
+            .not('status', 'in', '("Completed", "Canceled", "Cancelled", "Refunded", "Rejected")')
             .not('external_order_id', 'is', null);
 
         if (ordersError) throw ordersError;
+
         if (!orders || orders.length === 0) {
-            return NextResponse.json({ message: 'No active orders to sync', syncedCount: 0 });
+            return NextResponse.json({ success: true, message: 'No orders need syncing.', updatedCount: 0 });
         }
 
-        // 2. Group orders by provider
-        const ordersByProvider = orders.reduce((acc, order) => {
-            const pid = order.provider_id;
-            if (!acc[pid]) {
-                acc[pid] = {
+        // 2. Group by provider
+        const groups = {};
+        orders.forEach(order => {
+            const pId = order.api_providers.id;
+            if (!groups[pId]) {
+                groups[pId] = {
                     provider: order.api_providers,
-                    orderIds: [],
-                    orderMap: {}
+                    externalIds: [],
+                    map: {} // extId -> localUuid
                 };
             }
-            if (order.external_order_id) {
-                acc[pid].orderIds.push(order.external_order_id);
-                acc[pid].orderMap[order.external_order_id] = order.id;
+            const extIdStr = String(order.external_order_id);
+            groups[pId].externalIds.push(extIdStr);
+            groups[pId].map[extIdStr] = order.id;
+        });
+
+        let totalUpdated = 0;
+        const processResults = [];
+
+        // 3. Process each provider
+        for (const pId in groups) {
+            const group = groups[pId];
+
+            // Call SMM API (standard panels handle comma-separated IDs)
+            const result = await checkMultipleOrderStatuses(
+                group.provider.api_url,
+                group.provider.api_key,
+                group.externalIds
+            );
+
+            if (!result.success) {
+                processResults.push({ providerId: pId, error: result.error });
+                continue;
             }
-            return acc;
-        }, {});
 
-        let totalSynced = 0;
+            // result.data is usually { "123": { "status": "Pending", ... }, "124": { ... } }
+            const apiData = result.data;
 
-        // 3. Sync each provider
-        for (const pid in ordersByProvider) {
-            const { provider, orderIds, orderMap } = ordersByProvider[pid];
+            for (const [extId, info] of Object.entries(apiData)) {
+                if (!info || info.error) continue;
 
-            // SMM Panels usually allow checking up to 100 orders at once
-            // For simplicity, we check all if small, or we could chunk them
-            const response = await checkMultipleOrderStatuses(provider.api_url, provider.api_key, orderIds);
+                const localId = group.map[extId];
+                if (!localId) continue;
 
-            if (response.success && response.data) {
-                // response.data is an object with externalOrderId as key
-                for (const externalId in response.data) {
-                    const statusData = response.data[externalId];
-                    const localOrderId = orderMap[externalId];
+                // Normalize Status for local DB
+                // We keep the provider's casing but ensure it's not empty
+                const newStatus = info.status ? info.status : 'Pending';
 
-                    if (localOrderId && statusData.status) {
-                        // Update local order
-                        const { error: updateError } = await supabase
-                            .from('orders')
-                            .update({
-                                status: statusData.status,
-                                start_count: (statusData.start_count !== undefined && statusData.start_count !== null) ? parseInt(statusData.start_count) : null,
-                                remains: (statusData.remains !== undefined && statusData.remains !== null) ? parseInt(statusData.remains) : null,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', localOrderId);
+                const updatePayload = {
+                    status: newStatus,
+                    updated_at: new Date().toISOString()
+                };
 
-                        if (!updateError) totalSynced++;
-                    }
+                // Update start_count and remains if provided
+                if (info.start_count !== undefined && info.start_count !== null) {
+                    updatePayload.start_count = parseInt(info.start_count);
+                }
+                if (info.remains !== undefined && info.remains !== null) {
+                    updatePayload.remains = parseInt(info.remains);
+                }
+
+                const { error: updateError } = await supabase
+                    .from('orders')
+                    .update(updatePayload)
+                    .eq('id', localId);
+
+                if (!updateError) {
+                    totalUpdated++;
                 }
             }
         }
 
-        return NextResponse.json({ success: true, syncedCount: totalSynced });
+        return NextResponse.json({
+            success: true,
+            updatedCount: totalUpdated,
+            details: processResults.length > 0 ? processResults : undefined
+        });
 
     } catch (error) {
-        console.error('Sync Error:', error);
+        console.error('Unified Sync Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
