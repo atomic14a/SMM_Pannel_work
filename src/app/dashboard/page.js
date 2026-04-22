@@ -194,7 +194,7 @@ export default function Dashboard() {
                                         <td data-label="Qty">{order.quantity}</td>
                                         <td data-label="Cost" className="text-accent">Rs. {Number(order.cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
                                         <td data-label="Status">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1 flex-wrap" style={{ justifyContent: 'flex-end' }}>
                                                 <StatusBadge status={order.status} />
                                                 {['pending', 'processing'].includes(order.status?.toLowerCase()) && (
                                                     <button

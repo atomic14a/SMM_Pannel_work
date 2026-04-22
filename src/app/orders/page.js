@@ -220,7 +220,7 @@ export default function OrdersPage() {
                                             </a>
                                         </td>
                                         <td data-label="Status">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1 flex-wrap" style={{ justifyContent: 'flex-end' }}>
                                                 <StatusBadge status={order.status} />
                                                 {['pending', 'processing'].includes(order.status?.toLowerCase()) && (
                                                     <button
