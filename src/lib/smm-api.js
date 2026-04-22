@@ -23,7 +23,7 @@ export async function smmApiCall(apiUrl, apiKey, action, params = {}) {
     });
 
     const data = await response.json();
-    
+
     if (data.error) {
       throw new Error(data.error);
     }
@@ -71,4 +71,11 @@ export async function checkOrderStatus(apiUrl, apiKey, orderId) {
  */
 export async function checkMultipleOrderStatuses(apiUrl, apiKey, orderIds) {
   return smmApiCall(apiUrl, apiKey, 'status', { orders: orderIds.join(',') });
+}
+
+/**
+ * Cancel one or more orders
+ */
+export async function cancelOrders(apiUrl, apiKey, orderIds) {
+  return smmApiCall(apiUrl, apiKey, 'multi_cancel', { orders: orderIds.join(',') });
 }

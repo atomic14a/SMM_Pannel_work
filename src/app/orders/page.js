@@ -12,37 +12,70 @@ export default function OrdersPage() {
     // Filters
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [syncing, setSyncing] = useState(false);
+    const [cancellingId, setCancellingId] = useState(null);
 
     const supabase = createClient();
 
     useEffect(() => {
         fetchOrders();
-    }, [statusFilter]);
+    }, []);
 
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            let query = supabase
+            const { data, error } = await supabase
                 .from('orders')
                 .select(`
-          id, external_order_id, link, quantity, cost, status, start_count, remains, created_at,
-          services(name, category),
-          api_providers(name)
-        `)
+                    *,
+                    services(name, category),
+                    api_providers(name)
+                `)
                 .order('created_at', { ascending: false });
 
-            if (statusFilter !== 'All') {
-                query = query.eq('status', statusFilter);
-            }
-
-            const { data, error: err } = await query;
-            if (err) throw err;
-
+            if (error) throw error;
             setOrders(data || []);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/orders/sync', { method: 'POST' });
+            if (!res.ok) throw new Error('Sync failed');
+            await fetchOrders();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    const handleCancel = async (orderId) => {
+        if (!confirm('Are you sure you want to request cancellation for this order?')) return;
+
+        setCancellingId(orderId);
+        try {
+            const res = await fetch('/api/orders/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.error || 'Failed to cancel order');
+            } else {
+                await fetchOrders();
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            setCancellingId(null);
         }
     };
 
@@ -181,7 +214,21 @@ export default function OrdersPage() {
                                                 {order.link}
                                             </a>
                                         </td>
-                                        <td data-label="Status"><StatusBadge status={order.status} /></td>
+                                        <td data-label="Status">
+                                            <div className="flex items-center gap-2">
+                                                <StatusBadge status={order.status} />
+                                                {['Pending', 'Processing', 'In Progress'].includes(order.status) && (
+                                                    <button
+                                                        className="btn btn-danger"
+                                                        style={{ padding: '4px 8px', fontSize: '10px', minWidth: '50px' }}
+                                                        onClick={() => handleCancel(order.id)}
+                                                        disabled={cancellingId === order.id}
+                                                    >
+                                                        {cancellingId === order.id ? '...' : 'Cancel'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td data-label="Quantity / Rem.">
                                             <div className="font-bold">{order.quantity.toLocaleString()}</div>
                                             <div className="flex flex-col gap-1 mt-1" style={{ fontSize: '11px' }}>

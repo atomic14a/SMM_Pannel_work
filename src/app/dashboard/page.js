@@ -20,6 +20,7 @@ export default function Dashboard() {
     });
     const [recentOrders, setRecentOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [cancellingId, setCancellingId] = useState(null);
     const supabase = createClient();
 
     useEffect(() => {
@@ -72,6 +73,30 @@ export default function Dashboard() {
             console.error('Error fetching dashboard data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCancel = async (orderId) => {
+        if (!confirm('Are you sure you want to request cancellation for this order?')) return;
+
+        setCancellingId(orderId);
+        try {
+            const res = await fetch('/api/orders/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.error || 'Failed to cancel order');
+            } else {
+                await fetchDashboardData();
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            setCancellingId(null);
         }
     };
 
@@ -168,7 +193,21 @@ export default function Dashboard() {
                                         </td>
                                         <td data-label="Qty">{order.quantity}</td>
                                         <td data-label="Cost" className="text-accent">Rs. {Number(order.cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
-                                        <td data-label="Status"><StatusBadge status={order.status} /></td>
+                                        <td data-label="Status">
+                                            <div className="flex items-center gap-2">
+                                                <StatusBadge status={order.status} />
+                                                {['Pending', 'Processing', 'In Progress'].includes(order.status) && (
+                                                    <button
+                                                        className="btn btn-danger"
+                                                        style={{ padding: '4px 8px', fontSize: '10px', minWidth: '50px' }}
+                                                        onClick={() => handleCancel(order.id)}
+                                                        disabled={cancellingId === order.id}
+                                                    >
+                                                        {cancellingId === order.id ? '...' : 'Cancel'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
