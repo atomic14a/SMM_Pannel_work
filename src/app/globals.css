@@ -1333,36 +1333,40 @@ a:hover {
     border-bottom: 1px solid var(--border-subtle);
     padding: 12px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    /* Stack label and value vertically */
     align-items: flex-start;
-    /* Align to top for multi-line content */
-    text-align: right;
-    gap: 16px;
+    text-align: left;
+    gap: 4px;
   }
 
   .table td:last-child {
     border-bottom: none;
   }
 
-  /* Add labels before the values */
+  /* Add labels above the values */
   .table td::before {
     content: attr(data-label);
     font-weight: 700;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     color: var(--text-muted);
-    text-align: left;
-    flex-shrink: 0;
-    margin-top: 2px;
-    /* Align with first line of text */
+    display: block;
+    margin-bottom: 2px;
   }
 
   .table td>div,
   .table td>span,
   .table td>a {
     word-break: break-word;
-    /* Ensure long IDs or names wrap */
     max-width: 100%;
+    width: 100%;
+    /* Ensure content takes full width */
+  }
+
+  /* Status badge alignment on mobile card */
+  .table td .flex-wrap {
+    justify-content: flex-start !important;
   }
 
   /* Specific tweaks for dashboard and orders */
@@ -1420,13 +1424,25 @@ a:hover {
   }
 }
 
-.flex-wrap {
+.status-badge-container {
   display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.gap-1 {
-  gap: 4px;
+@media (max-width: 600px) {
+  .status-badge-container {
+    justify-content: flex-start !important;
+    width: 100%;
+  }
+}
+
+.text-wrap {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .gap-4 {

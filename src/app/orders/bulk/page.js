@@ -240,8 +240,8 @@ export default function BulkOrderPage() {
                                                             onChange={(e) => updateQuantity(item.service.id, e.target.value === '' ? 0 : parseInt(e.target.value))}
                                                         />
                                                     </div>
-                                                    <div className="text-right flex items-center gap-3" style={{ minWidth: '100px' }}>
-                                                        <div>
+                                                    <div className="flex flex-wrap items-center gap-3" style={{ minWidth: '100px', flex: 1, justifyContent: 'flex-end' }}>
+                                                        <div style={{ textAlign: 'right' }}>
                                                             <div className="text-muted mb-1" style={{ fontSize: '10px' }}>Subtotal</div>
                                                             <div className="text-accent font-bold" style={{ fontSize: '13px' }}>
                                                                 Rs. {(parseFloat(item.service.custom_rate || item.service.rate) * item.quantity / 1000).toFixed(2)}
@@ -249,12 +249,11 @@ export default function BulkOrderPage() {
                                                         </div>
                                                         <button
                                                             type="button"
-                                                            className="text-error"
-                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '0 4px' }}
+                                                            className="btn btn-icon btn-secondary"
+                                                            style={{ width: '32px', height: '32px' }}
                                                             onClick={() => removeFromCart(item.service.id)}
-                                                            title="Remove item"
                                                         >
-                                                            ×
+                                                            🗑️
                                                         </button>
                                                     </div>
                                                 </div>
