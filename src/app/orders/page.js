@@ -217,7 +217,7 @@ export default function OrdersPage() {
                                         <td data-label="Status">
                                             <div className="flex items-center gap-2">
                                                 <StatusBadge status={order.status} />
-                                                {['Pending', 'Processing', 'In Progress'].includes(order.status) && (
+                                                {['pending', 'processing'].includes(order.status?.toLowerCase()) && (
                                                     <button
                                                         className="btn btn-danger"
                                                         style={{ padding: '4px 8px', fontSize: '10px', minWidth: '50px' }}

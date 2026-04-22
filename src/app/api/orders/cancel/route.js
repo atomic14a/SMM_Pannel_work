@@ -37,9 +37,9 @@ export async function POST(request) {
         }
 
         // 2. Map status to check if it's potentially cancellable
-        // Standard SMM panels usually only allow cancellation for Pending, Processing, In Progress
-        const cancellableStatuses = ['Pending', 'Processing', 'In Progress'];
-        if (!cancellableStatuses.includes(order.status)) {
+        // Standard SMM panels usually only allow cancellation for Pending, Processing
+        const cancellableStatuses = ['pending', 'processing'];
+        if (!cancellableStatuses.includes(order.status?.toLowerCase())) {
             return NextResponse.json({ error: `Orders with status '${order.status}' cannot be cancelled.` }, { status: 400 });
         }
 
