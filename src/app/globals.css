@@ -1369,7 +1369,47 @@ a:hover {
     justify-content: flex-start !important;
   }
 
-  /* Specific tweaks for dashboard and orders */
+  /* Compact table mode for mobile (used in Bulk Order) */
+  .table.compact-table tr {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-areas:
+      "service service"
+      "rate action";
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .table.compact-table td {
+    padding: 2px 0;
+    border: none;
+    display: block;
+    width: 100%;
+  }
+
+  .table.compact-table td[data-label="Service"] {
+    grid-area: service;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+  }
+
+  .table.compact-table td[data-label="Rate (1K)"] {
+    grid-area: rate;
+  }
+
+  .table.compact-table td[data-label="Action"] {
+    grid-area: action;
+    text-align: right;
+  }
+
+  .table.compact-table td::before {
+    display: inline-block;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+
   .table td .truncate {
     max-width: 150px;
   }

@@ -158,7 +158,7 @@ export default function BulkOrderPage() {
                         </div>
 
                         <div className="table-container" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                            <table className="table">
+                            <table className="table compact-table">
                                 <thead>
                                     <tr>
                                         <th>Service</th>
