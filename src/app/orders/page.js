@@ -191,7 +191,7 @@ export default function OrdersPage() {
                     </div>
                 ) : (
                     <div className="table-container">
-                        <table className="table">
+                        <table className="table history-table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
@@ -210,15 +210,6 @@ export default function OrdersPage() {
                                             <div className="text-muted" style={{ fontSize: '11px' }}>Sys: {order.id.split('-')[0]}</div>
                                             <div className="font-bold">API: #{order.external_order_id || '---'}</div>
                                         </td>
-                                        <td data-label="Service">
-                                            <div className="font-bold" style={{ fontSize: '13px' }}>{order.services?.name || 'Unknown Service'}</div>
-                                            <div className="text-muted" style={{ fontSize: '11px' }}>{order.services?.category}</div>
-                                        </td>
-                                        <td data-label="Link">
-                                            <a href={order.link} target="_blank" rel="noopener noreferrer" className="truncate block" style={{ maxWidth: '150px' }}>
-                                                {order.link}
-                                            </a>
-                                        </td>
                                         <td data-label="Status">
                                             <div className="status-badge-container">
                                                 <StatusBadge status={order.status} />
@@ -234,6 +225,22 @@ export default function OrdersPage() {
                                                 )}
                                             </div>
                                         </td>
+                                        <td data-label="Service">
+                                            <div className="font-bold" style={{ fontSize: '13px' }}>{order.services?.name || 'Unknown Service'}</div>
+                                            <div className="text-muted" style={{ fontSize: '11px' }}>{order.services?.category}</div>
+                                        </td>
+
+                                        {/* This block is visible via CSS grid placement on mobile, hidden on desktop implicitly by table behavior */}
+                                        <div className="mobile-only-details">
+                                            <div className="truncate">Link: {order.link}</div>
+                                            <div>Qty: {order.quantity.toLocaleString()} {order.remains !== null && `(Rem: ${order.remains})`}</div>
+                                        </div>
+
+                                        <td data-label="Link">
+                                            <a href={order.link} target="_blank" rel="noopener noreferrer" className="truncate block" style={{ maxWidth: '150px' }}>
+                                                {order.link}
+                                            </a>
+                                        </td>
                                         <td data-label="Quantity / Rem.">
                                             <div className="font-bold">{order.quantity.toLocaleString()}</div>
                                             <div className="flex flex-col gap-1 mt-1" style={{ fontSize: '11px' }}>
@@ -241,8 +248,12 @@ export default function OrdersPage() {
                                                 {order.remains !== null && order.remains > 0 && <div className="text-warning">Remains: {order.remains}</div>}
                                             </div>
                                         </td>
-                                        <td data-label="Cost" className="text-accent">Rs. {Number(order.cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
-                                        <td data-label="Date" className="text-muted" style={{ fontSize: '12px' }}>{formatDate(order.created_at)}</td>
+                                        <td data-label="Cost" className="text-accent">
+                                            <div className="font-bold">Rs. {Number(order.cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</div>
+                                        </td>
+                                        <td data-label="Date">
+                                            <div className="text-muted" style={{ fontSize: '12px' }}>{formatDate(order.created_at)}</div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

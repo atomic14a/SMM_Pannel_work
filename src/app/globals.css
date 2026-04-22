@@ -1410,8 +1410,76 @@ a:hover {
     margin-bottom: 0;
   }
 
-  .table td .truncate {
-    max-width: 150px;
+  /* Order History Compact Mode */
+  .table.history-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Two columns for grouping */
+    grid-template-areas:
+      "id status"
+      "service service"
+      "details details"
+      "cost date";
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .table.history-table td {
+    padding: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table.history-table td[data-label="Order ID"] {
+    grid-area: id;
+  }
+
+  .table.history-table td[data-label="Status"] {
+    grid-area: status;
+    align-items: flex-end;
+    /* Push status to right */
+  }
+
+  .table.history-table td[data-label="Service"] {
+    grid-area: service;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  .table.history-table td[data-label="Link"],
+  .table.history-table td[data-label="Quantity / Rem."] {
+    display: none;
+    /* Hide link and qty details by default on compact history? Or group them? */
+  }
+
+  /* Let's group Link and Qty into a "details" area */
+  .table.history-table .mobile-only-details {
+    grid-area: details;
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+
+  .table.history-table td[data-label="Cost"] {
+    grid-area: cost;
+  }
+
+  .table.history-table td[data-label="Date"] {
+    grid-area: date;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .table.history-table td::before {
+    font-size: 9px;
+    margin-bottom: 0;
   }
 
   .table td:first-child {
