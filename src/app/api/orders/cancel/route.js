@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { cancelOrders } from '@/lib/smm-api';
 
 export async function POST(request) {
-    const supabase = createClient();
+    const supabase = createServerClient();
 
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession();
